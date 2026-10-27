@@ -53,7 +53,9 @@ def test_formatting_is_applied_to_body_header_right_aligned_and_request_heading_
     request_heading = next(p for p in doc.paragraphs if p.text == 'ПРОШУ:')
     assert request_heading.alignment == WD_ALIGN_PARAGRAPH.CENTER
     body = next(p for p in doc.paragraphs if p.text.startswith('12.08.2026 в отношении меня'))
-    assert body.alignment == WD_ALIGN_PARAGRAPH.LEFT
+    assert body.alignment == WD_ALIGN_PARAGRAPH.JUSTIFY
+    request_item = next(p for p in doc.paragraphs if p.text.startswith('1. Восстановить срок'))
+    assert request_item.alignment == WD_ALIGN_PARAGRAPH.JUSTIFY
     assert body.paragraph_format.line_spacing == pytest.approx(1.5)
     assert body.paragraph_format.first_line_indent.cm == pytest.approx(1.25, abs=0.01)
     assert all((run.font.name or 'Times New Roman') == 'Times New Roman' for p in doc.paragraphs for run in p.runs)
@@ -84,7 +86,7 @@ def test_generated_explanation_is_neutral_and_paragraphs_are_compact(tmp_path: P
     assert 'Таким образом, своевременно подать возражения' not in text
     body = next(p for p in doc.paragraphs if p.text.startswith('12.08.2026 в отношении меня'))
     assert body.paragraph_format.space_after.pt <= 3
-    assert body.alignment == WD_ALIGN_PARAGRAPH.LEFT
+    assert body.alignment == WD_ALIGN_PARAGRAPH.JUSTIFY
 
 
 def test_confirmed_llm_fields_are_not_overwritten(monkeypatch):

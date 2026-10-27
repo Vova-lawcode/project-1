@@ -111,7 +111,7 @@ def _disagreement_sentence(basis: str) -> str:
     return _ensure_sentence_end('Основанием для несогласия с судебным приказом считаю следующее: ' + text)
 
 
-def _set_paragraph(para, *, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=1.25,
+def _set_paragraph(para, *, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=1.25,
                    left_indent_cm=0, right_indent_cm=0, line_spacing=1.5,
                    before_pt=0, after_pt=6, keep_together=False):
     pf = para.paragraph_format
@@ -198,7 +198,7 @@ def generate_order_cancellation(case: CaseData, output: str | Path) -> str:
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.CENTER, first_indent_cm=0,
                            line_spacing=1.5, before_pt=3, after_pt=4, keep_together=True)
         elif kind == 'numbered':
-            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=-0.65,
+            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=-0.65,
                            left_indent_cm=0.65, line_spacing=1.5, before_pt=0, after_pt=3)
         elif kind == 'attachment':
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=-0.55,
@@ -207,7 +207,7 @@ def generate_order_cancellation(case: CaseData, output: str | Path) -> str:
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=0,
                            line_spacing=1.5, before_pt=6, after_pt=3, keep_together=True)
         else:
-            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=1.25,
+            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=1.25,
                            line_spacing=1.5, before_pt=0, after_pt=3, keep_together=keep)
         return para
 
