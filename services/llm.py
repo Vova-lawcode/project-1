@@ -17,6 +17,48 @@ INN_RE = re.compile(r'\b\d{10}(?:\d{2})?\b')
 SNILS_RE = re.compile(r'\b\d{3}[- ]?\d{3}[- ]?\d{3}[ -]?\d{2}\b')
 PHONE_RE = re.compile(r'(?:\+7|8)[\s()-]?\d{3}[\s()-]?\d{3}[\s-]?\d{2}[\s-]?\d{2}')
 EMAIL_RE = re.compile(r'\b[^\s@]+@[^\s@]+\.[^\s@]+\b')
+CORRECTION_RE = re.compile(r'\b(?:исправ(?:ь|ьте|ить|ление)?|поправ(?:ь|ьте|ить)?|замен(?:и|ите|ить)?|неверно|ошибка|на самом деле)\b|\bправильно\s*[:—-]', re.I)
+CORRECTION_FIELD_ALIASES = {
+    'court_number': (r'номер(?:\s+судебного)?\s+участка',),
+    'court_district': (r'назван\w*\s+(?:района|суда)', r'судебн\w*\s+район', r'район\s+суда'),
+    'court_address': (r'адрес\s+суда',),
+    'applicant_name': (r'фио', r'фамили\w*\s+заявителя'),
+    'birth_date': (r'дата\s+рождени\w*',),
+    'passport': (r'паспорт\w*', r'серия\s+и\s+номер'),
+    'passport_issued': (r'кем\s+выдан', r'дата\s+выдачи\s+паспорта'),
+    'inn': (r'\бинн\b',),
+    'snils': (r'снилс',),
+    'applicant_address': (r'адрес\s+заявителя', r'мой\s+адрес'),
+    'phone': (r'телефон',),
+    'email': (r'электронн\w*\s+почт\w*',),
+    'creditor_name': (r'взыскател\w*', r'кредитор\w*'),
+    'creditor_inn': (r'инн\s+взыскателя',),
+    'creditor_address': (r'адрес\s+взыскателя',),
+    'case_number': (r'номер\s+дела',),
+    'order_date': (r'дата\s+(?:судебного\s+)?приказа',),
+    'order_subject': (r'предмет\s+взыскания', r'сумма\s+взыскания'),
+    'ip_date': (r'дата\s+исполнительного\s+производства',),
+    'ip_number': (r'номер\s+исполнительного\s+производства',),
+    'awareness_date': (r'дата\s*,?\s*когда\s+узнал', r'когда\s+узнал\w*'),
+    'awareness_source': (r'источник\s+информации', r'откуда\s+узнал\w*'),
+    'missed_reason': (r'причина\s+пропуска', r'обстоятельств\w*\s+пропуска', r'почему\s+пропустил\w*'),
+    'supporting_documents': (r'приложени\w*', r'список\s+документов'),
+    'disagreement_basis': (r'основание\s+несогласия', r'с\s+чем\s+не\s+согласен'),
+    'effective_start_date': (r'дата\s+начала\s+срока', r'с\s+какого\s+числа'),
+    'fssp_office': (r'отдел\s+фссп', r'подразделение\s+фссп'),
+    'correspondence_address': (r'адрес\s+для\s+корреспонденции',),
+    'composition_date': (r'дата\s+составления',),
+}
+
+
+def _explicitly_corrected_fields(user_text: str) -> set[str]:
+    if not CORRECTION_RE.search(user_text):
+        return set()
+    return {
+        field
+        for field, aliases in CORRECTION_FIELD_ALIASES.items()
+        if any(re.search(alias, user_text, re.I) for alias in aliases)
+    }
 
 class LLMService:
     def __init__(self):
@@ -59,8 +101,10 @@ class LLMService:
             turn = AssistantTurn.model_validate(obj)
             # Treat model output as untrusted input and validate each field independently.
             safe_fields = {}
+            explicitly_corrected_fields = _explicitly_corrected_fields(user_text)
             for key, value in turn.fields.items():
-                if key not in CaseData.model_fields or getattr(case, key) or value is None:
+                is_populated = bool(getattr(case, key)) if key in CaseData.model_fields else False
+                if key not in CaseData.model_fields or (is_populated and key not in explicitly_corrected_fields) or value is None:
                     continue
                 try:
                     validated = CaseData.model_validate({key: value})
@@ -249,8 +293,11 @@ class LLMService:
             m = re.search(r'(?:приказ\s+(?:о|об)\s+|взыскани[ея]\s+)(.+?)(?=\.|$)', text, re.I)
             if m and len(m.group(1)) > 5: updates['order_subject'] = m.group(1).strip().rstrip('.')
         # Awareness source
-        if not case.awareness_source and re.search(r'госуслуг|госпочт|пристав|постановлен', text, re.I):
-            updates['awareness_source'] = text
+        if not case.awareness_source and re.search(r'госуслуг|госпочт|пристав|постановлен|уведомлен', text, re.I):
+            source = re.search(r'\b(?:из|на|через)\s+[^.;\n]*?(?:госуслуг|госпочт|фссп|пристав)[^.;\n]*', text, re.I)
+            if not source:
+                source = re.search(r'\b(?:уведомлен\w*|постановлен\w*|сообщен\w*|письм\w*)[^.;\n]*', text, re.I)
+            updates['awareness_source'] = source.group(0).strip() if source else text
         # Disagreement
         if not case.disagreement_basis and re.search(r'не согласен|не согласна|оспарива', text, re.I):
             updates['disagreement_basis'] = text

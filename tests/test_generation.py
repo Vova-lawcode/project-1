@@ -43,7 +43,7 @@ def test_generate_demo_contains_passport_and_polished_court_name(tmp_path: Path)
 
 def test_formatting_is_applied_to_body_header_right_aligned_and_request_heading_centered(tmp_path: Path):
     out = tmp_path / 'format.docx'
-    case = demo_case().model_copy(update={'court_district': 'Кировский район города Томска'})
+    case = demo_case().model_copy(update={'court_district': 'Кировского судебного района города Томска'})
     generate_order_cancellation(case, out)
     doc = Document(out)
     assert doc.sections[0].page_width.cm == pytest.approx(21.0, abs=0.1)
@@ -53,18 +53,38 @@ def test_formatting_is_applied_to_body_header_right_aligned_and_request_heading_
     request_heading = next(p for p in doc.paragraphs if p.text == 'ПРОШУ:')
     assert request_heading.alignment == WD_ALIGN_PARAGRAPH.CENTER
     body = next(p for p in doc.paragraphs if p.text.startswith('12.08.2026 в отношении меня'))
-    assert body.alignment == WD_ALIGN_PARAGRAPH.JUSTIFY
+    assert body.alignment == WD_ALIGN_PARAGRAPH.LEFT
     assert body.paragraph_format.line_spacing == pytest.approx(1.5)
     assert body.paragraph_format.first_line_indent.cm == pytest.approx(1.25, abs=0.01)
     assert all((run.font.name or 'Times New Roman') == 'Times New Roman' for p in doc.paragraphs for run in p.runs)
 
 
 def test_court_and_subject_normalization():
-    assert _normalize_court_district('Кировский район города Томска') == 'Кировского судебного района города Томска'
+    assert _normalize_court_district('Кировский район города Томска') == 'Кировский район города Томска'
     assert _normalize_court_district('Кировского судебного района города Томска') == 'Кировского судебного района города Томска'
-    assert _normalize_court_district('Советский район города Казани') == 'Советского судебного района города Казани'
-    assert _normalize_court_district('Центральный район г. Новосибирска') == 'Центрального судебного района г. Новосибирска'
+    assert _normalize_court_district(' Советский   район города Казани ') == 'Советский район города Казани'
     assert _normalize_order_subject('взыскание задолженности по коммунальным услугам') == 'взыскании задолженности по коммунальным услугам'
+    assert _normalize_order_subject('задолженность по договору займа') == 'взыскании задолженности по договору займа'
+    assert _normalize_order_subject('задолженности по коммунальным услугам') == 'взыскании задолженности по коммунальным услугам'
+
+
+def test_generated_explanation_is_neutral_and_paragraphs_are_compact(tmp_path: Path):
+    case = demo_case().model_copy(update={
+        'awareness_source': 'на сайте Госуслуг; уведомление от ФССП Одинцовского района',
+        'missed_reason': 'Не жил в России.',
+    })
+    out = tmp_path / 'neutral.docx'
+    generate_order_cancellation(case, out)
+    doc = Document(out)
+    text = _all_text(doc)
+
+    assert 'Источник информации: На сайте Госуслуг; уведомление от ФССП Одинцовского района.' in text
+    assert 'Обстоятельства пропуска срока: Не жил в России.' in text
+    assert 'Копию указанного судебного приказа я не получал' not in text
+    assert 'Таким образом, своевременно подать возражения' not in text
+    body = next(p for p in doc.paragraphs if p.text.startswith('12.08.2026 в отношении меня'))
+    assert body.paragraph_format.space_after.pt <= 3
+    assert body.alignment == WD_ALIGN_PARAGRAPH.LEFT
 
 
 def test_confirmed_llm_fields_are_not_overwritten(monkeypatch):
@@ -93,9 +113,14 @@ def test_confirmed_llm_fields_are_not_overwritten(monkeypatch):
     service.provider = 'openai'
     service.client = FakeClient()
     service.model = 'test'
-    result = service.next_turn([], CaseData(applicant_name='Иванов Иван Иванович'), '')
+    case = CaseData(applicant_name='Иванов Иван Иванович', birth_date='15.03.1989')
+    result = service.next_turn([], case, '')
     assert 'applicant_name' not in result.fields
-    assert result.fields['birth_date'] == '01.01.2000'
+    assert 'birth_date' not in result.fields
+
+    corrected = service.next_turn([], case, 'Исправь ФИО заявителя: Петров Пётр Петрович')
+    assert corrected.fields['applicant_name'] == 'Подменённое Имя'
+    assert 'birth_date' not in corrected.fields
 
 
 def test_case_schema_rejects_oversized_input():

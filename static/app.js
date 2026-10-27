@@ -8,7 +8,7 @@ const demoBtn=document.getElementById('demoBtn');
 
 const keys=['court_number','court_district','court_address','applicant_name','birth_date','passport','passport_issued','applicant_address','creditor_name','case_number','order_date','order_subject','awareness_date','awareness_source','missed_reason','disagreement_basis','effective_start_date','fssp_office'];
 const fieldLabels={
-  court_number:'Номер судебного участка',court_district:'Судебный район',court_address:'Адрес суда',
+  court_number:'Номер судебного участка',court_district:'Официальное название района и региона суда',court_address:'Адрес суда',
   applicant_name:'ФИО заявителя',birth_date:'Дата рождения',passport:'Паспорт',passport_issued:'Кем и когда выдан',
   inn:'ИНН',snils:'СНИЛС',applicant_address:'Адрес заявителя',phone:'Телефон',email:'Электронная почта',
   creditor_name:'Взыскатель',creditor_inn:'ИНН взыскателя',creditor_address:'Адрес взыскателя',case_number:'Номер дела',

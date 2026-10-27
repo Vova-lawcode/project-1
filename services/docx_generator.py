@@ -32,32 +32,8 @@ def _set_run_font(run, bold: bool | None = None):
 
 
 def _normalize_court_district(value: str) -> str:
-    """Normalize common district names to the genitive form used after 'участка №'."""
-    text = re.sub(r'\s+', ' ', (value or '').strip()).rstrip('.,; ')
-    if not text:
-        return text
-
-    # Keep official wording as supplied when it is already in the genitive form.
-    if re.search(r'судебного района\s+(?:города|г\.)\s+.+$', text, re.IGNORECASE):
-        return text[0].upper() + text[1:]
-
-    # Convert common Russian adjective endings without assuming a particular city.
-    match = re.fullmatch(
-        r'(.+?)(?:\s+судебный)?\s+район\s+(города|г\.)\s+(.+)',
-        text,
-        re.IGNORECASE,
-    )
-    if match:
-        district_name, city_marker, city_name = match.groups()
-        district_name = district_name.strip()
-        endings = (('цкий', 'цкого'), ('ский', 'ского'), ('ый', 'ого'), ('ой', 'ого'), ('ий', 'его'))
-        for nominative, genitive in endings:
-            if district_name.casefold().endswith(nominative):
-                district_name = district_name[:-len(nominative)] + genitive
-                break
-        normalized = f'{district_name} судебного района {city_marker} {city_name}'
-        return normalized[0].upper() + normalized[1:]
-    return text
+    """Clean spacing while preserving the court's official wording verbatim."""
+    return re.sub(r'\s+', ' ', (value or '').strip()).rstrip('.,; ')
 
 
 def _normalize_order_subject(value: str) -> str:
@@ -66,6 +42,12 @@ def _normalize_order_subject(value: str) -> str:
         text = text[2:].lstrip()
     if text.casefold().startswith('взыскание'):
         text = 'взыскании' + text[len('взыскание'):]
+    elif text.casefold().startswith('задолженности'):
+        remainder = text[len('задолженности'):]
+        text = 'взыскании задолженности' + remainder
+    elif text.casefold().startswith('задолженность'):
+        remainder = text[len('задолженность'):]
+        text = 'взыскании задолженности' + remainder
     return text
 
 
@@ -114,24 +96,6 @@ def _document_copy_title(item: str) -> str:
     return _ensure_sentence_end('Копия ' + text)
 
 
-def _applicant_gender(name: str) -> str | None:
-    """Infer grammatical gender only when Russian name endings make it clear."""
-    parts = re.findall(r'[А-ЯЁа-яё-]+', name or '')
-    if not parts:
-        return None
-    patronymic = parts[-1].casefold()
-    if patronymic.endswith(('вна', 'ична', 'инична')):
-        return 'female'
-    if patronymic.endswith(('вич', 'евич', 'ович', 'ич')):
-        return 'male'
-    surname = parts[0].casefold()
-    if surname.endswith(('ова', 'ева', 'ёва', 'ина', 'ына', 'ская', 'цкая')):
-        return 'female'
-    if surname.endswith(('ов', 'ев', 'ёв', 'ин', 'ын', 'ский', 'цкий')):
-        return 'male'
-    return None
-
-
 def _disagreement_sentence(basis: str) -> str:
     text = re.sub(r'\s+', ' ', (basis or '').strip()).rstrip('.; ')
     if not text:
@@ -147,7 +111,7 @@ def _disagreement_sentence(basis: str) -> str:
     return _ensure_sentence_end('Основанием для несогласия с судебным приказом считаю следующее: ' + text)
 
 
-def _set_paragraph(para, *, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=1.25,
+def _set_paragraph(para, *, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=1.25,
                    left_indent_cm=0, right_indent_cm=0, line_spacing=1.5,
                    before_pt=0, after_pt=6, keep_together=False):
     pf = para.paragraph_format
@@ -226,25 +190,25 @@ def generate_order_cancellation(case: CaseData, output: str | Path) -> str:
                            line_spacing=1.0, before_pt=0, after_pt=1, keep_together=True)
         elif kind == 'header_gap':
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.RIGHT, first_indent_cm=0,
-                           line_spacing=1.0, before_pt=0, after_pt=5)
+                           line_spacing=1.0, before_pt=0, after_pt=2)
         elif kind == 'title':
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.CENTER, first_indent_cm=0,
-                           line_spacing=1.0, before_pt=4, after_pt=5, keep_together=True)
+                           line_spacing=1.0, before_pt=2, after_pt=3, keep_together=True)
         elif kind == 'request_heading':
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.CENTER, first_indent_cm=0,
                            line_spacing=1.5, before_pt=3, after_pt=4, keep_together=True)
         elif kind == 'numbered':
-            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=-0.65,
-                           left_indent_cm=0.65, line_spacing=1.5, before_pt=0, after_pt=6)
+            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=-0.65,
+                           left_indent_cm=0.65, line_spacing=1.5, before_pt=0, after_pt=3)
         elif kind == 'attachment':
-            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=-0.55,
-                           left_indent_cm=0.55, line_spacing=1.5, before_pt=0, after_pt=2)
+            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=-0.55,
+                           left_indent_cm=0.55, line_spacing=1.5, before_pt=0, after_pt=1)
         elif kind == 'attachments_heading':
             _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=0,
                            line_spacing=1.5, before_pt=6, after_pt=3, keep_together=True)
         else:
-            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.JUSTIFY, first_indent_cm=1.25,
-                           line_spacing=1.5, before_pt=0, after_pt=6, keep_together=keep)
+            _set_paragraph(para, align=WD_ALIGN_PARAGRAPH.LEFT, first_indent_cm=1.25,
+                           line_spacing=1.5, before_pt=0, after_pt=3, keep_together=keep)
         return para
 
     district = _normalize_court_district(case.court_district)
@@ -299,26 +263,21 @@ def generate_order_cancellation(case: CaseData, output: str | Path) -> str:
             ip_parts.append(f'№ {case.ip_number}')
         add_para('На основании указанного судебного приказа в отношении меня ' + ' '.join(ip_parts) + ' возбуждено исполнительное производство.')
 
-    gender = _applicant_gender(case.applicant_name)
-    received_form = 'не получала' if gender == 'female' else ('не получал' if gender == 'male' else 'не получал(а)')
-    if case.awareness_date or case.awareness_source:
-        date_part = case.awareness_date.strip()
-        source_part = case.awareness_source.strip().rstrip('.; ')
-        if date_part and source_part:
-            awareness = f'{date_part}, {source_part}'
-        else:
-            awareness = date_part or source_part
-        add_para(f'Копию указанного судебного приказа я {received_form}. О его наличии и о возбуждении исполнительного производства мне стало известно только {awareness}.')
+    if case.awareness_date:
+        add_para(f'О наличии судебного приказа мне стало известно {case.awareness_date.strip()}.')
+    if case.awareness_source:
+        source = _ensure_sentence_end(_capitalize_sentence(case.awareness_source.strip()))
+        add_para(f'Источник информации: {source}')
 
     if case.missed_reason:
-        add_para(_ensure_sentence_end(_capitalize_sentence(case.missed_reason)))
+        reason = _ensure_sentence_end(_capitalize_sentence(case.missed_reason.strip()))
+        add_para('Обстоятельства пропуска срока: ' + reason)
     if case.supporting_documents:
         add_para('В подтверждение изложенных обстоятельств прилагаю копии документов, перечисленных в разделе «Приложения (копии)».')
 
-    add_para('Таким образом, своевременно подать возражения относительно исполнения судебного приказа не удалось по причинам, не зависящим от меня.')
     add_para('В соответствии со ст. 112 ГПК РФ лицам, пропустившим установленный федеральным законом процессуальный срок по причинам, признанным судом уважительными, пропущенный срок может быть восстановлен.')
     add_para('На основании ст. 129 ГПК РФ должник вправе обжаловать судебный приказ в течение 10 дней с момента его получения.')
-    add_para(f'С учётом того, что копию судебного приказа я {received_form}, срок для подачи возражений относительно его исполнения подлежит исчислению с {case.effective_start_date}.')
+    add_para(f'Прошу исчислять срок для подачи возражений относительно исполнения судебного приказа с {case.effective_start_date}.')
     add_para('Настоящим заявляю о своём несогласии с судебным приказом.')
     add_para(_disagreement_sentence(case.disagreement_basis))
     add_para('На основании изложенного и руководствуясь статьями 112, 128, 129 ГПК РФ,')
