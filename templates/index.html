@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Иск-Бот AI — подготовка заявления</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Информация о сервисе">
+      <a class="brand" href="/" aria-label="Иск-Бот AI — главная">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M6 11.5 16 6l10 5.5v14H6v-14Z" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M11 25V15h10v10M9 12h14M16 15v10" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+        </span>
+        <span class="brand-copy"><strong>Иск-Бот</strong><small>правовой помощник</small></span>
+      </a>
+
+      <div class="sidebar-rule"></div>
+      <p class="eyebrow sidebar-eyebrow">ВАШ ДОКУМЕНТ</p>
+      <h1>Отмена<br>судебного приказа</h1>
+      <p class="sidebar-intro">Спокойно разберём ситуацию и подготовим проект заявления по вашим данным.</p>
+
+      <section class="progress-card" aria-label="Прогресс заполнения">
+        <div class="progress-heading"><span>Прогресс</span><strong id="progressCount">0 из 18</strong></div>
+        <div class="progress-track" role="progressbar" aria-label="Заполненные сведения" aria-valuemin="0" aria-valuemax="18" aria-valuenow="0">
+          <div class="progress-fill" id="progressBar"></div>
+        </div>
+        <p id="statusBox" class="progress-note">Начните с описания ситуации — помощник подскажет, что понадобится.</p>
+      </section>
+
+      <div class="sidebar-bottom">
+        <div class="privacy-note">
+          <span class="privacy-icon" aria-hidden="true">✦</span>
+          <p><strong>Ваш темп — ваш выбор</strong><br>Можно отвечать обычными словами и уточнять детали по ходу.</p>
+        </div>
+        <button id="demoBtn" class="example-button" type="button">
+          <span class="example-icon" aria-hidden="true">↗</span>
+          <span><strong>Посмотреть пример</strong><small>Открыть образец заполнения</small></span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div class="breadcrumb"><span>Подготовка документа</span><span class="breadcrumb-dot">/</span><strong>Заявление об отмене приказа</strong></div>
+        <div class="assistant-status"><span class="online-dot"></span><span>Помощник на связи</span></div>
+      </header>
+
+      <div class="workspace-content">
+        <section class="welcome-card" aria-labelledby="welcomeTitle">
+          <div class="welcome-copy">
+            <span class="eyebrow welcome-eyebrow"><span class="eyebrow-line"></span>ПРАВОВОЙ ПОМОЩНИК</span>
+            <h2 id="welcomeTitle">Подготовим заявление<br>вместе, шаг за шагом</h2>
+            <p>Расскажите, что произошло. Я помогу собрать сведения для проекта документа.</p>
+            <div class="welcome-meta"><span class="meta-icon" aria-hidden="true">⌁</span> Начните с любого удобного вам места</div>
+          </div>
+          <div class="welcome-art" aria-hidden="true">
+            <svg viewBox="0 0 400 270" fill="none">
+              <g class="art-lines" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m98 93 102-54 102 54H98Z"/>
+                <path d="M112 101h176M121 106v117m39-117v117m40-117v117m39-117v117m39-117v117M106 228h188M94 238h212"/>
+                <path d="M88 246h224M126 91h148M200 50v-9m-8 4h16"/>
+                <path d="M74 254h252" opacity=".55"/>
+              </g>
+              <g class="art-accent" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M331 67v55m-22 0h44m-39 0-14 24h28l-14-24Zm22 0-14 24h28l-14-24Z"/>
+                <path d="M319 153c3.8 5.3 8 8 12 8s8.2-2.7 12-8"/>
+                <circle cx="331" cy="61" r="6"/>
+              </g>
+              <circle class="art-sun" cx="78" cy="67" r="23"/>
+              <path class="art-ground" d="M46 262h307"/>
+            </svg>
+          </div>
+          <div class="welcome-watermark" aria-hidden="true">§</div>
+        </section>
+
+        <section class="conversation-card" aria-labelledby="conversationTitle">
+          <div class="conversation-heading">
+            <div class="conversation-title-wrap">
+              <span class="chat-mark" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5c-1.2 0-2.3-.28-3.3-.78L4 20l1.38-4.34A7.48 7.48 0 0 1 5 11.5 7.5 7.5 0 1 1 20 11.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8.5 11.5h7M8.5 14.5h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </span>
+              <div><h3 id="conversationTitle">Диалог с помощником</h3><p>Ваши ответы помогут заполнить заявление</p></div>
+            </div>
+            <span class="conversation-badge"><span class="online-dot"></span> Диалог</span>
+          </div>
+
+          <div id="messages" class="messages" aria-live="polite" aria-relevant="additions">
+            <div class="message-row assistant-row">
+              <span class="message-avatar" aria-hidden="true">И</span>
+              <div class="message-content"><span class="message-author">Иск-Бот <time>сейчас</time></span>
+                <div class="msg bot">Здравствуйте! Расскажите своими словами, что произошло. Я буду задавать уточняющие вопросы и помогу собрать данные для заявления. В процессе понадобятся дата рождения, паспортные данные, сведения о выдаче паспорта и адрес заявителя.</div>
+              </div>
+            </div>
+          </div>
+
+          <form id="chatForm" class="composer">
+            <label class="sr-only" for="userText">Ваше сообщение</label>
+            <textarea id="userText" placeholder="Напишите сообщение…" required rows="2"></textarea>
+            <button class="send-button" type="submit"><span>Отправить</span><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3.5 10h12m-5-5 5 5-5 5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </form>
+          <div class="composer-hint"><span class="hint-dot"></span> Не нужно подбирать юридические формулировки — отвечайте как удобно</div>
+        </section>
+
+        <section class="document-panel" aria-label="Черновик документа">
+          <details class="case-details">
+            <summary>
+              <span class="document-summary-icon" aria-hidden="true"><svg viewBox="0 0 22 22" fill="none"><path d="M6 2.75h7l4 4V19a.75.75 0 0 1-.75.75h-10.5A.75.75 0 0 1 5 19V3.5a.75.75 0 0 1 1-.75Z" stroke="currentColor" stroke-width="1.4"/><path d="M13 3v4h4M8 11h6M8 14h6M8 17h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg></span>
+              <span class="document-summary-copy"><strong>Сведения для заявления</strong><small>Проверяйте их по мере заполнения</small></span>
+              <span class="summary-count" id="summaryCount">Пока пусто</span>
+              <span class="summary-chevron" aria-hidden="true">⌄</span>
+            </summary>
+            <div id="caseView" class="caseView"><p class="empty-case">Здесь появятся сведения, которые мы соберём в диалоге.</p></div>
+          </details>
+          <div class="actions">
+            <div class="action-copy"><strong>Документ готов?</strong><span>Сформируйте файл Word для проверки</span></div>
+            <div class="action-buttons">
+              <button id="generateBtn" class="generate-button" type="button" disabled><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5.5 2.75h6.25l3.5 3.5v10.5a.75.75 0 0 1-.75.75H5.5a.75.75 0 0 1-.75-.75V3.5a.75.75 0 0 1 .75-.75Z" stroke="currentColor" stroke-width="1.4"/><path d="M11.5 3v4h4M7.5 11h5M7.5 14h5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Сформировать DOCX</button>
+              <a id="downloadLink" class="download hidden" href="#"><svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 2.75v9m0 0 3.5-3.5M10 11.75l-3.5-3.5M3.75 13.25v3a1 1 0 0 0 1 1h10.5a1 1 0 0 0 1-1v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>Скачать DOCX</a>
+            </div>
+          </div>
+        </section>
+        <footer class="workspace-footer"><span>Иск-Бот AI</span><span>Проект документа формируется по сведениям, указанным пользователем.</span></footer>
+      </div>
+    </main>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
